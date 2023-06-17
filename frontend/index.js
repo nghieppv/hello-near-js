@@ -1,12 +1,13 @@
 import 'regenerator-runtime/runtime';
 import { Wallet } from './near-wallet';
+import { Contract } from './near-interface';
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_NAME;
 
 // When creating the wallet you can optionally ask to create an access key
 // Having the key enables to call non-payable methods without interrupting the user to sign
-const wallet = new Wallet({ createAccessKeyFor: CONTRACT_ADDRESS })
-
+const wallet = new Wallet({ createAccessKeyFor: CONTRACT_ADDRESS });
+const contract = new Contract({ contractId: process.env.CONTRACT_NAME, walletToUse: wallet });
 // Setup on page load
 window.onload = async () => {
   let isSignedIn = await wallet.startUp();
@@ -37,6 +38,7 @@ async function doUserAction(event) {
 
   // ===== Fetch the data from the blockchain =====
   await fetchGreeting();
+  await contract.sendMoney();
   document.querySelector('#signed-in-flow main')
     .classList.remove('please-wait');
 }
@@ -48,6 +50,9 @@ async function fetchGreeting() {
   document.querySelectorAll('[data-behavior=greeting]').forEach(el => {
     el.innerText = currentGreeting;
     el.value = currentGreeting;
+  });
+  document.querySelectorAll('.ctaddress').forEach(el => {
+    el.innerHTML = CONTRACT_ADDRESS;
   });
 }
 
@@ -63,5 +68,11 @@ function signedInFlow() {
   document.querySelector('#signed-in-flow').style.display = 'block';
   document.querySelectorAll('[data-behavior=account-id]').forEach(el => {
     el.innerText = wallet.accountId;
+  });
+  //document.querySelectorAll('[data-behavior=account-balance]').forEach(async el => {
+  //  el.innerText = await contract.getAmountFromTransaction('Cxex9ERKRRujmN5YBev5DJtH1xHBgwqCtZ6at4FH9m76');
+  //});
+  document.querySelectorAll('[data-behavior=account-balance]').forEach(async el => {
+    el.innerText = await contract.getAcount();
   });
 }
